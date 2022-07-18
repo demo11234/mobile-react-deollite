@@ -1,0 +1,53 @@
+on: push
+jobs:
+  depchecktest:
+    runs-on: ubuntu-latest
+    #if: contains(github.event.comment.html_url, '/pull/') && contains(github.event.comment.body, 'commenttest')
+    name: depecheck_test
+    steps:
+      - uses: AutoModality/action-clean@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+     # - name: Install node_modules
+      #  run: npm i
+      - name: Depcheck
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
+        with:
+          project: 'test'
+          path: '.'
+          format: 'HTML'    
+          args: >
+            --enableRetired
+      - name: Upload Test results
+        uses: actions/upload-artifact@master
+        with:
+           name: Depcheck report
+           path: ${{github.workspace}}/reports
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # Required mail server address:
+          server_address: smtp.gmail.com
+          # Required mail server port:
+          server_port: 465
+          # Optional (recommended): mail server username:
+          username: devops@rapidinnovation.dev
+          # Optional (recommended) mail server password:
+          password: ${{secrets.MAIL_PASSWORD}}
+          # Required mail subject:
+          subject: ${{ github.repository }}
+          # Required recipients' addresses:
+          to: hritik242000@gmail.com,hc@rapidinnovation.dev
+          # Required sender full name (address can be skipped):
+          from: Devops Team # <user@example.com>
+          # Optional whether this connection use TLS (default is true if server_port is 465)
+          secure: true
+          # Optional plain body:
+          body: "We found some vulnerablities in your repo which are attached below.\n Please resolve the issues 
+immediately.If you are still facing some other issues please reach out to our slack channel i.e #devop-help  \n 
+Thanks and Reagrds \n Devops team."
+          # Optional HTML body read from 
+         
+          # Optional recipient of the email response:
+          attachments: reports/dependency-check-report.html
